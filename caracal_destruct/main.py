@@ -17,7 +17,7 @@ from omegaconf import OmegaConf
 def get_obsconf(options, config):
     # setup piping infractructure to send messages to the parent
     workers_directory = os.path.join(caracal.pckgdir, "workers")
-    backend = config['general']['backend']
+    backend = config['general'].get('backend', "singularity")
     if options.container_tech and options.container_tech != 'default':
         backend = options.container_tech
 
