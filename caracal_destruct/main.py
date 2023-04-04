@@ -5,35 +5,33 @@ import pdb
 import traceback
 import sys
 from caracal import log
-from caracal.workers import worker_administrator
+from caracal.workers.worker_administrator import WorkerAdministrator
 import logging
 import stimela
 from caracal.dispatch_crew import config_parser
 from .distribute import Scatter
 from .slurm.run import SlurmRun
 from omegaconf import OmegaConf
+from caracal.schema import SCHEMA_VERSION
 
 
 def get_obsconf(options, config):
     # setup piping infractructure to send messages to the parent
-    workers_directory = os.path.join(caracal.pckgdir, "workers")
-    backend = config['general'].get('backend', "singularity")
+    workers_directory = os.path.join(caracal.PCKGDIR, "workers")
+    backend = config['general']['backend']
     if options.container_tech and options.container_tech != 'default':
         backend = options.container_tech
 
     def __run(debug=False):
         """ Executes pipeline """
-#        with stream_director(log) as director:  # stdout and stderr needs to go to the log as well -- nah
-
+#       with stream_director(log) as director:  # stdout and stderr needs to go to the log as well -- nah
         try:
-            pipeline = worker_administrator(config,
+            pipeline = WorkerAdministrator(config,
                            workers_directory,
                            add_all_first=False, prefix=options.general_prefix,
                            configFileName=options.config, singularity_image_dir=options.singularity_image_dir,
-                           container_tech=backend, start_worker="general", end_worker="obsconf")
-
+                           container_tech=backend, start_worker=options.start_worker, end_worker=options.end_worker)
             pipeline.run_workers()
-
         except SystemExit as e:
             log.error(f"A pipeline worker initiated sys.exit({e.code}). This is likely a bug, please report.")
             log.info(f"More information can be found in the logfile at {caracal.CARACAL_LOG}")
@@ -56,11 +54,9 @@ def get_obsconf(options, config):
                 pdb.post_mortem(sys.exc_info()[2])
             log.info("exiting with error code 1")
             sys.exit(1)  # indicate failure
-
         return pipeline
-    
 
-    return __run
+    return __run()
 
 @click.command()
 @click.argument("config_file", type=str)
@@ -77,7 +73,7 @@ def driver(config_file, nband, bands, batchconfig):
         CONFIG_FILE: CARACal configuration file
     """
 
-    argv = f"caracal -ct singularity -c {config_file}".split()
+    argv = f"-ct singularity -c {config_file} -sw general -ew obsconf".split()
     parser = config_parser.basic_parser(argv)
     options, _ = parser.parse_known_args(argv)
 
@@ -86,13 +82,12 @@ def driver(config_file, nband, bands, batchconfig):
 
     # Run caracal to get information about the input MS (-sw general -ew obsconf)
 
-
     try:
         parser = config_parser.config_parser()
         config, version = parser.validate_config(config_file)
-        if version != caracal.SCHEMA_VERSION:
+        if version != SCHEMA_VERSION:
             log.warning("Config file {} schema version is {}, current CARACal version is {}".format(config_file,
-                                    version, caracal.SCHEMA_VERSION))
+                                    version, SCHEMA_VERSION))
             log.warning("Will try to proceed anyway, but please be advised that configuration options may have changed.")
         # populate parser with items from config
         parser.populate_parser(config)
@@ -115,8 +110,7 @@ def driver(config_file, nband, bands, batchconfig):
             pdb.post_mortem(sys.exc_info()[2])
         sys.exit(1)  # indicate failure
 
-
-    obsconf = get_obsconf(options=options, config=config)()
+    obsconf = get_obsconf(options=options, config=config)
     
     scatter = Scatter(obsconf)
     scatter.set(bands or nband)
