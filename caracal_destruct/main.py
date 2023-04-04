@@ -63,21 +63,21 @@ def get_obsconf(options, config):
     return __run
 
 @click.command()
-@click.argument("config", type=str)
+@click.argument("config_file", type=str)
 @click.option("-bc", "--batch-config", "batchconfig", type=str,
               help="YAML file with batch configuration. Generated automatically if unspecified.")
 @click.option("-nb", "--nband", type=int, default=1,
               help="Number of frequency bands to split data into")
 @click.option("-b", "--bands", type=str,
               help="CASA-style comma separated bands (or spws) to parallize the pipeline over. Overide -nb/--nband. Example, '0:0~1023,0:1024~2048'")
-def driver(config, nband, bands, batchconfig):
+def driver(config_file, nband, bands, batchconfig):
     """
         A destruction of CARACals: Batch runners for CARACal
 
-        CONFIG: CARACal configuration file
+        CONFIG_FILE: CARACal configuration file
     """
 
-    argv = f"caracal -ct singularity -c {config}".split()
+    argv = f"caracal -ct singularity -c {config_file}".split()
     parser = config_parser.basic_parser(argv)
     options, _ = parser.parse_known_args(argv)
 
@@ -85,6 +85,37 @@ def driver(config, nband, bands, batchconfig):
     stimela.logger().setLevel(logging.DEBUG if options.debug else logging.INFO)
 
     # Run caracal to get information about the input MS (-sw general -ew obsconf)
+
+
+    try:
+        parser = config_parser.config_parser()
+        config, version = parser.validate_config(config_file)
+        if version != caracal.SCHEMA_VERSION:
+            log.warning("Config file {} schema version is {}, current CARACal version is {}".format(config_file,
+                                    version, caracal.SCHEMA_VERSION))
+            log.warning("Will try to proceed anyway, but please be advised that configuration options may have changed.")
+        # populate parser with items from config
+        parser.populate_parser(config)
+        # reparse arguments
+        caracal.log.info("Loading pipeline configuration from {}".format(config_file), extra=dict(color="GREEN"))
+        options, config = parser.update_config_from_args(config, argv)
+        # raise warning on schema version
+    except config_parser.ConfigErrors as exc:
+        log.error("{}, list of errors follows:".format(exc))
+        for section, errors in exc.errors.items():
+            print("  {}:".format(section))
+            for err in errors:
+                print("    - {}".format(err))
+        sys.exit(1)  # indicate failure
+    except Exception as exc:
+        traceback.print_exc()
+        log.error("Error parsing arguments or configuration: {}".format(exc))
+        if options.debug:
+            log.warning("you are running with -debug enabled, dropping you into pdb. Use Ctrl+D to exit.")
+            pdb.post_mortem(sys.exc_info()[2])
+        sys.exit(1)  # indicate failure
+
+
     obsconf = get_obsconf(options=options, config=config)()
     
     scatter = Scatter(obsconf)
