@@ -110,6 +110,9 @@ def driver(config_file, nband, bands, batchconfig):
             pdb.post_mortem(sys.exc_info()[2])
         sys.exit(1)  # indicate failure
 
+    # LOG config file to screen
+    parser.log_options(config)
+
     obsconf = get_obsconf(options=options, config=config)
     
     scatter = Scatter(obsconf)
