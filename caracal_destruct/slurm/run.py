@@ -23,7 +23,7 @@ class SlurmRun():
 
         # Build caracal command
         command_line = ["caracal --general-backend singularity"]
-        command_line += [f"--general-rawdatadir {pipeline.rawdata}"]
+        command_line += [f"--general-rawdatadir {pipeline.rawdatadir}"]
         command_line += [f"--config {pipeline.config}"]
 
         self.var = "--transform-split_field-spw"

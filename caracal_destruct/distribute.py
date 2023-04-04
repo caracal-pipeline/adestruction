@@ -9,7 +9,7 @@ class Scatter():
         self.obsidx = obsidx
 
     def set(self, bands):
-        self.nchan = self.pipeline.nchans[self.obsidx]
+        self.nchan = self.pipeline.nchans[self.obsidx][0]
         if isinstance(bands, int):
             wsize = self.nchan/bands
             
