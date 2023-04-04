@@ -4,11 +4,12 @@ class DistributionException(Exception):
     pass
 
 class Scatter():
-    def __init__(self, pipeline):
+    def __init__(self, pipeline, obsidx=0):
         self.pipeline = pipeline
+        self.obsidx = obsidx
 
     def set(self, bands):
-        self.nchan = self.pipeline.nchans
+        self.nchan = self.pipeline.nchans[self.obsidx]
         if isinstance(bands, int):
             wsize = self.nchan/bands
             
