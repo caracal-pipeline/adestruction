@@ -38,7 +38,7 @@ class SlurmRun():
             command = command_line + [f"--general.output {outdir} --general-msdir {msdir}"]
             command = " ".join(command)
             LOG.info(f"Launching job using slurm. SPW={band} \n{repr(self.slurm)}")
-            runstring = "{command} {self.var} '{band}'"
+            runstring = f"{command} {self.var} '{band}'"
             job = self.slurm.sbatch(runstring)
             LOG.info(f"Job {job} is running: {runstring} ")
             self.jobs.append(job)
