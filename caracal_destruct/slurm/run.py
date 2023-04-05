@@ -37,7 +37,7 @@ class SlurmRun():
             outdir = os.path.join(pipeline.output, label)
             command = command_line + [f"--general.output {outdir} --general-msdir {msdir}"]
             command = " ".join(command)
-            LOG.info(f"Launching job using slurm. SPW={band} \n{repr(self.slurm)}")
+            LOG.info(f"Launching job using slurm. SPW={band} \n{self.slurm.__str__()}")
             runstring = f"{command} {self.var} '{band}'"
             job = self.slurm.sbatch(runstring)
             LOG.info(f"Job {job} is running: {runstring} ")
