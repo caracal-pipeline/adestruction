@@ -11,9 +11,9 @@ class Scatter():
     def set(self, bands):
         self.nchan = self.pipeline.nchans[self.obsidx][0]
         if isinstance(bands, int):
-            wsize = self.nchan/bands
+            wsize = self.nchan//bands
             
-            bw_edges = np.arange(0, self.nchan, wsize)
+            bw_edges = np.arange(0, self.nchan, wsize, dtype=int)
             bands = [f"{band}~{band+wsize}"for band in bw_edges]
 
         elif hasattr(bands, "__iter__") and not isinstance(bands, (bytes, str)):
