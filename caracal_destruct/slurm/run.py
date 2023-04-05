@@ -24,7 +24,7 @@ class SlurmRun():
         # Build caracal command
         command_line = ["caracal --general-backend singularity"]
         command_line += [f"--general-rawdatadir {pipeline.rawdatadir}"]
-        command_line += [f"--config {pipeline.config}"]
+        command_line += [f"--config {pipeline.config_file}"]
 
         self.var = "--transform-split_field-spw"
         self.values = self.scatter.bands
@@ -32,7 +32,7 @@ class SlurmRun():
 
 
         for band in self.values:
-            label = ",".join(re.split(r":|~", band))
+            label = "_".join(re.split(r":|~", band))
             msdir = os.path.join(pipeline.msdir, label) 
             outdir = os.path.join(pipeline.output, label)
             command = command_line + [f"--general.output {outdir} --general-msdir {msdir}"]
