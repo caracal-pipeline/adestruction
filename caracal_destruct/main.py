@@ -11,7 +11,7 @@ import stimela
 from caracal.dispatch_crew import config_parser
 from .distribute import Scatter
 from .slurm.run import SlurmRun
-from omegaconf import OmegaConf
+from ruamel.yaml as yaml
 from caracal.schema import SCHEMA_VERSION
 
 
@@ -117,7 +117,8 @@ def driver(config_file, nband, bands, batchconfig):
     
     scatter = Scatter(obsconf)
     scatter.set(bands or nband)
-    batchconfig = OmegaConf.load(batchconfig)
+    with open(batchconfig, "r") as stdr:
+        batchconfig = yaml.load(stdr, yaml.RoundTripLoader, version=(1, 1))
     runit = SlurmRun(scatter=scatter, config=batchconfig)
 
     runit.submit()
