@@ -30,7 +30,6 @@ class SlurmRun():
         self.values = self.scatter.bands
         self.jobs = []
 
-
         for band in self.values:
             label = "_".join(re.split(r":|~", band))
             msdir = os.path.join(pipeline.msdir, label) 
