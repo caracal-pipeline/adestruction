@@ -11,7 +11,7 @@ import stimela
 from caracal.dispatch_crew import config_parser
 from .distribute import Scatter
 from .slurm.run import SlurmRun
-from ruamel.yaml as yaml
+import ruamel.yaml as yaml
 from caracal.schema import SCHEMA_VERSION
 
 
