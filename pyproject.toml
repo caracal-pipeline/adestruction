@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "caracal-destruct"
-version = "0.1.0"
+version = "0.1.1"
 description = "Batch runners for CARACal"
 authors = ["sphemakh <sphemakh@gmail.com>"]
 license = "MIT License"
@@ -8,7 +8,7 @@ readme = "README.md"
 packages = [{include = "caracal_destruct"}]
 
 [tool.poetry.dependencies]
-caracal = {git = "https://github.com/caracal-pipeline/caracal.git", branch="master", extras="all"}
+caracal = {git = "https://github.com/caracal-pipeline/caracal.git", branch="master", extras=["all"]}
 python = "^3.8"
 click = "^8.1.3"
 simple-slurm = "^0.2.6"
