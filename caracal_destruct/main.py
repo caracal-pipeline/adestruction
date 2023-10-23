@@ -96,5 +96,6 @@ def driver(config_file, nband, bands, batchconfig):
     # needed to distribute the work
     runit.init_destruction()
     # Submit distrbuted jobs to Slurm
+    runit.scatter.set(nband)
     runit.submit()
                     
