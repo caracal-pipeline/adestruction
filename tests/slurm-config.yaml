@@ -1,4 +1,6 @@
-cpus_per_task: 15
+slurm:
+  cpus-per-task: 32
+  mem: 128GB
 
 caracal:
   all:
@@ -6,26 +8,31 @@ caracal:
     end-worker: inspect
   runs:
     - 
-      index: 0
-      options:
+    index: 0
+    options:
+        flag-flag_spw-enable: true
         flag-flag_spw-chans: "0:0~200"
         flag-flag_antennas-enable: true
         flag-flag_antennas: m001
-    -   
-      index: 1
-      options:
-        flag-flag_antennas-enable: true
-        flag-flag_antennas: m002,m003
-    -   
-      index: 2
+    -
+    index: 1
+    options:
+      flag-flag_antennas-enable: true
+      flag-flag_antennas: m001,m002,m003
     - 
-      index: 3
-      options:
-        flag-flagenable: true
-        flag-flag_spw-enable: true
-        flag-flag_spw-chans: "0:0~200,0:1500~2047"
-        flag_spw-ensure_valid: true
-        flag-flag_antennas-enable: true
-        flag-flag_antennas-antennas: m019,m020,m022,m028
+    index: 2
+    options:
+      flag-flag_antennas-enable: true
+      flag-flag_antennas: m001
+      flag-flag_spw-enable: true
+      flag-flag_spw-chans: "0:1740~1800"
+    -
+    index: 3
+    options:
+      flag-flagenable: true
+      flag-flag_spw-enable: true
+      flag-flag_spw-chans: "0:0~200,0:1800~2047"
+      flag_spw-ensure_valid: true
+      flag-flag_antennas-enable: true
+      flag-flag_antennas-antennas: m019,m020,m022,m028
   
-    

@@ -11,9 +11,10 @@ import traceback
 class SlurmRun():
     def __init__(self, pipeline, config):
         self.pipeline = pipeline
-        self.config = config
+        self.config_caracal = config["caracal"]
+        self.config_slurm = config["slurm"]
         
-        self.slurm = Slurm(**self.config)
+        self.slurm = Slurm(**self.config_slurm)
         
         self.command_line = ["caracal --general-backend singularity"]
         self.command_line += [f"--general-rawdatadir {self.pipeline.rawdatadir}"]
@@ -22,13 +23,13 @@ class SlurmRun():
     
     def init_destruction(self):
         command_line = self.command_line + ["--end-worker obsconf"]
-        obsconf = Slurm(**self.config)
+        obsconf = Slurm(**self.config_slurm)
         log.info("Running CARACal obsconf worker to get observation information. ")
         obsconf.srun(" ".join(command_line))
         log.info("CARACal obsconf files created. Ready to distribute")
 
         self.run_obsconf()
-        self.scatter = Scatter(self.pipeline)
+        self.scatter = Scatter(self.pipeline, self.command_line)
 
     def run_obsconf(self):
         try:
@@ -66,13 +67,18 @@ class SlurmRun():
 
         self.var = "--transform-split_field-spw"
         self.values = self.scatter.bands
+        self.runopts = self.scatter.runs
         self.jobs = []
 
-        for band in self.values:
+        for i in len(self.scatter.nbands):
+            band = self.values[i]
+            runopts = self.runopts[i]
             label = "_".join(re.split(r":|~", band))
             msdir = os.path.join(pipeline.msdir, label) 
             outdir = os.path.join(pipeline.output, label)
             command = command_line + [f"--general-output {outdir} --general-msdir {msdir}"]
+            if runopts:
+                command += runopts
             command = " ".join(command)
             log.info(f"Launching job using slurm. SPW={band} \n{self.slurm.__str__()}")
             runstring = f"{command} {self.var} '{band}'"

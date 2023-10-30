@@ -4,12 +4,13 @@ class DistributionException(Exception):
     pass
 
 class Scatter():
-    def __init__(self, pipeline, obsidx=0, spwid=0):
+    def __init__(self, pipeline, runsdict=None, obsidx=0, spwid=0):
         self.pipeline = pipeline
         self.obsidx = obsidx
         self.spwid = spwid
+        self.runsdict = runsdict
 
-    def set(self, bands):
+    def set(self, bands, runsdict=None):
         self.nchan = self.pipeline.nchans[self.obsidx][self.spwid]
         if isinstance(bands, int):
             wsize = self.nchan//bands
@@ -24,4 +25,14 @@ class Scatter():
             raise DistributionException(
                 f"Cannot distribute pipeline over {bands}. Please verify that this is a list of strings (CASA style)")
 
+
         self.bands = bands
+        self.nbands = len(bands)
+        self.runsdict = runsdict or self.runsdict or {}
+
+        self.runs = [None]*self.nbands
+        for bandrun in runsdict:
+            optlist = [f"--{key} {val}" for key,val in bandrun.options.items()]
+            self.runs[bandrun.index] = optlist
+
+            
