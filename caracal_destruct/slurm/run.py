@@ -24,7 +24,7 @@ class SlurmRun():
         command_line = self.command_line + ["--end-worker obsconf"]
         obsconf = Slurm(**self.config)
         log.info("Running CARACal obsconf worker to get observation information. ")
-        obsconf.srun(command_line)
+        obsconf.srun(" ".join(command_line))
         log.info("CARACal obsconf files created. Ready to distribute")
 
         self.run_obsconf()
