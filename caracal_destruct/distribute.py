@@ -25,14 +25,17 @@ class Scatter():
             raise DistributionException(
                 f"Cannot distribute pipeline over {bands}. Please verify that this is a list of strings (CASA style)")
 
-
         self.bands = bands
         self.nbands = len(bands)
         self.runsdict = runsdict or self.runsdict or {}
 
         self.runs = [None]*self.nbands
-        for bandrun in runsdict:
-            optlist = [f"--{key} {val}" for key,val in bandrun.options.items()]
-            self.runs[bandrun.index] = optlist
+        for bandrun in self.runsdict:
+            optlist =  []
+            for key,val in bandrun["options"].items():
+                if isinstance(val, bool):
+                    val = str(val).lower()
+                optlist.append(f"--{key} {val}")
+            self.runs[ bandrun["index"] ] = optlist
 
             

@@ -29,7 +29,7 @@ class SlurmRun():
         log.info("CARACal obsconf files created. Ready to distribute")
 
         self.run_obsconf()
-        self.scatter = Scatter(self.pipeline, self.command_line)
+        self.scatter = Scatter(self.pipeline, self.config_caracal["runs"])
 
     def run_obsconf(self):
         try:
@@ -70,7 +70,7 @@ class SlurmRun():
         self.runopts = self.scatter.runs
         self.jobs = []
 
-        for i in len(self.scatter.nbands):
+        for i in range(self.scatter.nbands):
             band = self.values[i]
             runopts = self.runopts[i]
             label = "_".join(re.split(r":|~", band))
