@@ -8,7 +8,8 @@ readme = "README.md"
 packages = [{include = "caracal_destruct"}]
 
 [tool.poetry.dependencies]
-caracal = {git = "https://github.com/caracal-pipeline/caracal.git", branch="collections-abc", extras=["all"]}
+stimela = {git = "https://github.com/ratt-ru/Stimela-classic.git", branch="pre-release"}
+caracal = {git = "https://github.com/caracal-pipeline/caracal.git", branch="master", extras=["all"]}
 python = "^3.8"
 click = "^8.1.3"
 simple-slurm = "^0.2.6"
