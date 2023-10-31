@@ -32,13 +32,14 @@ def init_pipeline(options, config):
 
 @click.command()
 @click.argument("config_file", type=str)
-@click.option("-bc", "--batch-config", "batchconfig", type=str,
+@click.option("-bc", "--batch-config", "batchconfig", type=click.File(),
               help="YAML file with batch configuration. Generated automatically if unspecified.")
 @click.option("-nb", "--nband", type=int, default=1,
               help="Number of frequency bands to split data into")
 @click.option("-b", "--bands", type=str,
               help="CASA-style comma separated bands (or spws) to parallize the pipeline over. Overide -nb/--nband. Example, '0:0~1023,0:1024~2048'")
-def driver(config_file, nband, bands, batchconfig):
+@click.option("-s", "--skip", help="Skip the listed steps. Specify as a comma separated list of integers starting from zero.")
+def driver(config_file, nband, bands, batchconfig, skip):
     """
         A destruction of CARACals: Batch runners for CARACal
 
@@ -88,14 +89,20 @@ def driver(config_file, nband, bands, batchconfig):
     # Initialise main pipeline
     pipeline = init_pipeline(options, config)
 
-    with open(batchconfig, "r") as stdr:
-        batchconfig = yaml.load(stdr, yaml.RoundTripLoader, version=(1, 1))
+    batchdict = yaml.load(batchconfig, yaml.RoundTripLoader, version=(1, 1))
 
-    runit = SlurmRun(pipeline, config=batchconfig)
+    if skip:
+        skipus = [int(a) for a in skip.split(",")]
+    else:
+        skipus = []
+
+    runit = SlurmRun(pipeline, config=batchdict, skip=skipus)
     # Run CARACal obsconf worker and exit. This is required to get the observation information 
     # needed to distribute the work
     runit.init_destruction()
     # Submit distrbuted jobs to Slurm
-    runit.scatter.set(nband)
+    if bands:
+        bands = bands.split(",")
+    runit.scatter.set(nband=nband, bands=bands)
     runit.submit()
                     

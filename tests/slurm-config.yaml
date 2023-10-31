@@ -1,6 +1,6 @@
 slurm:
   cpus_per_task: 32
-  mem: 128GB
+  mem: 256GB
 caracal:
   all:
     start-worker: flag
