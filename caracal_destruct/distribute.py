@@ -10,26 +10,23 @@ class Scatter():
         self.spwid = spwid
         self.runsdict = runsdict
 
-    def set(self, bands, runsdict=None):
+    def set(self, nband=None, bands=None, runsdict=None):
         self.nchan = self.pipeline.nchans[self.obsidx][self.spwid]
-        if isinstance(bands, int):
-            wsize = self.nchan//bands
+
+        if nband:
+            wsize = self.nchan//nband
             
             bw_edges = np.arange(0, self.nchan, wsize, dtype=int)
-            bands = [f"{self.spwid}:{band}~{band+wsize}"for band in bw_edges]
-
-        elif hasattr(bands, "__iter__") and not isinstance(bands, (bytes, str)):
-            # We have a list/tuple
-            pass
+            self.bands = [f"{self.spwid}:{band}~{band+wsize}"for band in bw_edges]
+            self.nband = nband
         else:
-            raise DistributionException(
-                f"Cannot distribute pipeline over {bands}. Please verify that this is a list of strings (CASA style)")
+            self.nband = len(bands)
+            self.bands = bands
 
-        self.bands = bands
-        self.nbands = len(bands)
+        
         self.runsdict = runsdict or self.runsdict or {}
 
-        self.runs = [None]*self.nbands
+        self.runs = [None]*self.nband
         for bandrun in self.runsdict:
             optlist =  []
             for key,val in bandrun["options"].items():

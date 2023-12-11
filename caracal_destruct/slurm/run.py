@@ -2,6 +2,7 @@ from simple_slurm import Slurm
 from caracal import log
 import caracal
 from caracal_destruct.distribute import Scatter
+from typing import List
 import os
 import sys
 import re
@@ -9,12 +10,13 @@ import traceback
 
 
 class SlurmRun():
-    def __init__(self, pipeline, config):
+    def __init__(self, pipeline, config, skip:List):
         self.pipeline = pipeline
         self.config_caracal = config["caracal"]
         self.config_slurm = config["slurm"]
         
         self.slurm = Slurm(**self.config_slurm)
+        self.skip = skip or []
         
         self.command_line = ["caracal --general-backend singularity"]
         self.command_line += [f"--general-rawdatadir {self.pipeline.rawdatadir}"]
@@ -70,7 +72,11 @@ class SlurmRun():
         self.runopts = self.scatter.runs
         self.jobs = []
 
-        for i in range(self.scatter.nbands):
+        for i in range(self.scatter.nband):
+            band = self.values[i]
+            if i in self.skip:
+                log.info(f"Skipping band indexed {i}, named '{band}' as requested")
+                continue
             band = self.values[i]
             runopts = self.runopts[i]
             label = "_".join(re.split(r":|~", band))
