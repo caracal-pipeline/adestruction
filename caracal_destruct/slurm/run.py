@@ -72,7 +72,7 @@ class SlurmRun():
         self.runopts = self.scatter.runs
         self.jobs = []
 
-        for i in range(self.scatter.nbands):
+        for i in range(self.scatter.nband):
             band = self.values[i]
             if i in self.skip:
                 log.info(f"Skipping band indexed {i}, named '{band}' as requested")
