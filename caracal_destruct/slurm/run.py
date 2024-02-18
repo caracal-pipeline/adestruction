@@ -112,7 +112,7 @@ class SlurmRun():
                 log.info(f"Skipping ms '{msrun.ms}' as requested")
                 continue
             name,ext = os.path.splitext(msrun.ms)
-            job["getdata-dataid"] = name
+            job["getdata-dataid"] = [name]
             job["getdata-extension"] = ext[1:]
            
             # add common options here so they can be overwritten ms-specific options 
@@ -132,6 +132,7 @@ class SlurmRun():
             command_line = " ".join(self.command_line + args)
             log.info(f"Launching job using slurm. ms={msrun.ms} \n{self.slurm.__str__()}")
             jobid = self.slurm.sbatch(command_line)
+            self.slurm.reset_cmd()
             log.info(f"Job {jobid} is running: {command_line} ")
             self.jobs.append(jobid)
         return self.jobs
