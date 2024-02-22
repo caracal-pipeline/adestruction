@@ -4,7 +4,10 @@ version = "0.1.1"
 description = "Batch runners for CARACal"
 authors = ["sphemakh <sphemakh@gmail.com>"]
 license = "MIT License"
-readme = "README.md"
+readme = "README.rst"
+homepage = "https://github.com/caracal-pipeline/adestruction"
+repository = "https://github.com/caracal-pipeline/adestruction"
+keywords = ["Astronomy", "Slurm", "Pipelines"]
 packages = [{include = "caracal_destruct"}]
 
 [tool.poetry.dependencies]
@@ -15,11 +18,15 @@ click = "^8.1.3"
 simple-slurm = "^0.2.6"
 omegaconf = "^2.3.0"
 
+[tool.poetry.group.tests]
+optional = true
+[tool.poetry.group.tests.dependencies]
+pytest = "^7.1.3"
+flake8 = "^5.0.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
 
 [tool.poetry.scripts]
 caracal-destruct = "caracal_destruct.main:driver"
