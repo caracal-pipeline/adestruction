@@ -12,7 +12,7 @@ from caracal_destruct.utils import File
 
 
 class SlurmRun():
-    def __init__(self, pipeline:File|WorkerAdministrator, config:Dict, skip:List):
+    def __init__(self, pipeline:'File' | 'WorkerAdministrator', config:Dict, skip:List):
         self.pipeline = pipeline
         self.config_caracal = config.caracal
         self.config_slurm = config.slurm
