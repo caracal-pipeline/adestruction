@@ -18,7 +18,7 @@ This package is available on *PYPI*, allowing
 
 .. code-block:: bash
   
-    pip install adestruction
+    pip install caracal-destruct
 
 =====
 Usage
