@@ -51,5 +51,5 @@ jobs:
     - name: Publish distribution 📦 to PyPI
       uses: pypa/gh-action-pypi-publish@master
       with:
-        user: ${{ secrets.pypi_user }}
-        password: ${{ secrets.pypi_token }}
+        user: __token__
+        password: ${{ secrets.PYPI_TOKEN_ADESTRUCTION }}
