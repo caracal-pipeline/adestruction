@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "caracal-destruct"
-version = "0.1.1rc1"
+version = "0.1.1"
 description = "Batch runners for CARACal"
 authors = ["sphemakh <sphemakh@gmail.com>"]
 license = "MIT License"
