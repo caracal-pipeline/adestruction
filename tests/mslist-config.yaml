@@ -1,0 +1,26 @@
+slurm:
+  cpus_per_task: 32
+  mem: 256GB
+caracal:
+  all:
+    start-worker: flag
+    end-worker: inspect
+  runs:
+    - ms: foo.ms
+      options:
+        general-output: myoutput-01
+        flag-flag_spw-enable: 1
+        flag-flag_spw-chans: 0:0~200
+        flag-flag_antennas-enable: true
+        flag-flag_antennas-antennas: m001
+    - ms: bar.ms
+      options:
+        general-output: myoutput-02
+        flag-flag_antennas-enable: 1
+        flag-flag_antennas-antennas: m001,m002,m003
+    - ms: foobar.ms
+      import:
+       - bar.ms
+      options:
+        general-output: myoutput-03
+        

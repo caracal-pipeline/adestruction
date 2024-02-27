@@ -10,9 +10,10 @@ import logging
 import stimela
 from caracal.dispatch_crew import config_parser
 from .slurm.run import SlurmRun
-import ruamel.yaml as yaml
+from omegaconf.omegaconf import OmegaConf
 from caracal.schema import SCHEMA_VERSION
-
+from typing import List, Dict
+from .utils import File
 
 
 def init_pipeline(options, config):
@@ -23,30 +24,44 @@ def init_pipeline(options, config):
         backend = options.container_tech
 
     pipeline = WorkerAdministrator(config,
-               workers_directory,
-               add_all_first=False, prefix=options.general_prefix,
-               configFileName=options.config, singularity_image_dir=options.singularity_image_dir,
-               container_tech=backend, start_worker=options.start_worker, end_worker=options.end_worker)
+                                   workers_directory,
+                                   add_all_first=False, prefix=options.general_prefix,
+                                   configFileName=options.config,
+                                   singularity_image_dir=options.singularity_image_dir,
+                                   container_tech=backend, start_worker=options.start_worker,
+                                   end_worker=options.end_worker)
     return pipeline
 
+def mslist_driver(batchdict:Dict, config:File, skipus:List[str|int]) -> int:
+    """_summary_
 
-@click.command()
-@click.argument("config_file", type=str)
-@click.option("-bc", "--batch-config", "batchconfig", type=click.File(),
-              help="YAML file with batch configuration. Generated automatically if unspecified.")
-@click.option("-nb", "--nband", type=int, default=1,
-              help="Number of frequency bands to split data into")
-@click.option("-b", "--bands", type=str,
-              help="CASA-style comma separated bands (or spws) to parallize the pipeline over. Overide -nb/--nband. Example, '0:0~1023,0:1024~2048'")
-@click.option("-s", "--skip", help="Skip the listed steps. Specify as a comma separated list of integers starting from zero.")
-def driver(config_file, nband, bands, batchconfig, skip):
+    Args:
+        batchdict (Dict): _description_
+        config (File): _description_
+        skipus (List[str | int]): _description_
+
+    Returns:
+        int: 0 if successful, 
     """
-        A destruction of CARACals: Batch runners for CARACal
+    runit = SlurmRun(config, batchdict, skip=skipus)
+    runit.submit_mslist()
+    
+    return 0
+    
+def bands_driver(batchdict, configfile:File, nband: int, 
+                 bands:List[str], skipus:List) -> int:
+    """_summary_
 
-        CONFIG_FILE: CARACal configuration file
+    Args:
+        batchdict (_type_): _description_
+        config (WorkerAdministrator): _description_
+        skipus (List): _description_
+
+    Returns:
+        int: _description_
     """
-
-    argv = f"-ct singularity -c {config_file} -sw general -ew obsconf".split()
+    
+    argv = f"-ct singularity -c {configfile.filename} -sw general -ew obsconf".split()
     parser = config_parser.basic_parser(argv)
     options, _ = parser.parse_known_args(argv)
 
@@ -57,15 +72,15 @@ def driver(config_file, nband, bands, batchconfig, skip):
 
     try:
         parser = config_parser.config_parser()
-        config, version = parser.validate_config(config_file)
+        config, version = parser.validate_config(configfile.filename)
         if version != SCHEMA_VERSION:
-            log.warning("Config file {} schema version is {}, current CARACal version is {}".format(config_file,
+            log.warning("Config file {} schema version is {}, current CARACal version is {}".format(configfile.filename,
                                     version, SCHEMA_VERSION))
             log.warning("Will try to proceed anyway, but please be advised that configuration options may have changed.")
         # populate parser with items from config
         parser.populate_parser(config)
         # reparse arguments
-        caracal.log.info("Loading pipeline configuration from {}".format(config_file), extra=dict(color="GREEN"))
+        caracal.log.info("Loading pipeline configuration from {}".format(configfile.filename), extra=dict(color="GREEN"))
         options, config = parser.update_config_from_args(config, argv)
         # raise warning on schema version
     except config_parser.ConfigErrors as exc:
@@ -89,13 +104,6 @@ def driver(config_file, nband, bands, batchconfig, skip):
     # Initialise main pipeline
     pipeline = init_pipeline(options, config)
 
-    batchdict = yaml.load(batchconfig, yaml.RoundTripLoader, version=(1, 1))
-
-    if skip:
-        skipus = [int(a) for a in skip.split(",")]
-    else:
-        skipus = []
-
     runit = SlurmRun(pipeline, config=batchdict, skip=skipus)
     # Run CARACal obsconf worker and exit. This is required to get the observation information 
     # needed to distribute the work
@@ -104,5 +112,37 @@ def driver(config_file, nband, bands, batchconfig, skip):
     if bands:
         bands = bands.split(",")
     runit.scatter.set(nband=nband, bands=bands)
-    runit.submit()
-                    
+    runit.submit_bands()
+
+
+@click.command()
+@click.argument("config_file", type=File)
+@click.option("-bc", "--batch-config", "batchconfig", type=File, required=True,
+              help="YAML file with batch configuration. Generated automatically if unspecified.")
+@click.option("-nb", "--nband", type=int,
+              help="Number of frequency bands to split data into")
+@click.option("-b", "--bands", type=str,
+              help="CASA-style comma separated bands (or spws) to parallize the pipeline over. Overide -nb/--nband. Example, '0:0~1023,0:1024~2048'")
+@click.option("-s", "--skip", type=str,
+              help="Skip the listed steps. Specify as a comma separated list of integers (starting from zero) or ms names/paths.")
+def driver(config_file, nband, bands, batchconfig, skip):
+    """
+        A destruction of CARACals: Batch runners for CARACal
+
+        CONFIG_FILE: CARACal configuration file
+    """
+    
+    batchdict = OmegaConf.load(batchconfig.filename)
+    if skip:
+        skipus = skip.split(",")
+    else:
+        skipus = []
+    
+    if hasattr(batchdict.caracal.runs[0], "ms"):
+        mslist_driver(batchdict, config_file, skipus)
+    elif hasattr(batchdict.caracal.runs[0], "index"):
+        skipus = list(map(int, skipus))
+        bands_driver(batchdict, config_file, nband, bands, skipus)
+        
+    return 0
+    

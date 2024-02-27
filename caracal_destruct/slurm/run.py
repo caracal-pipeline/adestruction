@@ -2,26 +2,35 @@ from simple_slurm import Slurm
 from caracal import log
 import caracal
 from caracal_destruct.distribute import Scatter
-from typing import List
+from typing import List, Dict
 import os
 import sys
 import re
 import traceback
+from caracal.workers.worker_administrator import WorkerAdministrator
+from caracal_destruct.utils import File
 
 
 class SlurmRun():
-    def __init__(self, pipeline, config, skip:List):
+    def __init__(self, pipeline:'File | WorkerAdministrator', config:Dict, skip:List):
         self.pipeline = pipeline
-        self.config_caracal = config["caracal"]
-        self.config_slurm = config["slurm"]
+        self.config_caracal = config.caracal
+        self.config_slurm = config.slurm
         
         self.slurm = Slurm(**self.config_slurm)
         self.skip = skip or []
+        # options that apply to all runs
+        self.allruns = self.config_caracal.get("all", {})
         
         self.command_line = ["caracal --general-backend singularity"]
-        self.command_line += [f"--general-rawdatadir {self.pipeline.rawdatadir}"]
-        self.command_line += [f"--config {self.pipeline.config_file}"]
+        if isinstance(pipeline, WorkerAdministrator):
+            self.pipeline = pipeline
+            self.command_line += [f"--general-rawdatadir {self.pipeline.rawdatadir}"]
+            self.command_line += [f"--config {self.pipeline.config_file}"]
+        else:
+            self.command_line += [f"--config {self.pipeline.filename}"]
         
+        self.jobs = []
     
     def init_destruction(self):
         command_line = self.command_line + ["--end-worker obsconf"]
@@ -31,7 +40,7 @@ class SlurmRun():
         log.info("CARACal obsconf files created. Ready to distribute")
 
         self.run_obsconf()
-        self.scatter = Scatter(self.pipeline, self.config_caracal["runs"])
+        self.scatter = Scatter(self.pipeline, self.config_caracal)
 
     def run_obsconf(self):
         try:
@@ -53,9 +62,7 @@ class SlurmRun():
             sys.exit(1)  # indicate failure
         return self.pipeline
 
-    
-
-    def submit(self):
+    def submit_bands(self):
         """
         Run CARACal pipeline over specified bands using slurm
         """
@@ -63,14 +70,13 @@ class SlurmRun():
         pipeline = self.pipeline
         if not hasattr(self, "scatter"):
             raise RuntimeError("Slurm Run scatter has not been set.")
-                       
+        
         # Build caracal command
         command_line = list(self.command_line)
 
         self.var = "--transform-split_field-spw"
         self.values = self.scatter.bands
         self.runopts = self.scatter.runs
-        self.jobs = []
 
         for i in range(self.scatter.nband):
             band = self.values[i]
@@ -91,3 +97,43 @@ class SlurmRun():
             job = self.slurm.sbatch(runstring)
             log.info(f"Job {job} is running: {runstring} ")
             self.jobs.append(job)
+        return self.jobs
+    
+    def submit_mslist(self):
+        """
+        Run caracal pipeline over a list of MSs
+        """
+        
+        runopts = self.config_caracal.runs
+        runidx = dict([(runopt.ms, idx) for idx, runopt in enumerate(runopts)])
+        for msrun in runopts:
+            job = {}
+            if msrun.ms in self.skip:
+                log.info(f"Skipping ms '{msrun.ms}' as requested")
+                continue
+            name,ext = os.path.splitext(msrun.ms)
+            job["getdata-dataid"] = [name]
+            job["getdata-extension"] = ext[1:]
+           
+            # add common options here so they can be overwritten ms-specific options 
+            for key,val in self.allruns.items():
+                job[key] = val
+            
+            # add imports from other runs
+            for label in msrun.get("import", []):
+                idx = runidx[label] 
+                for key,val in runopts[idx]["options"].items():
+                    job[key] = val
+            for key,val in msrun.get("options", {}).items():
+                job[key] = val
+            
+            # Stringify dict
+            args = [f"--{key} {val}" for key,val in job.items()]
+            command_line = " ".join(self.command_line + args)
+            log.info(f"Launching job using slurm. ms={msrun.ms} \n{self.slurm.__str__()}")
+            jobid = self.slurm.sbatch(command_line)
+            self.slurm.reset_cmd()
+            log.info(f"Job {jobid} is running: {command_line} ")
+            self.jobs.append(jobid)
+        return self.jobs
+        
