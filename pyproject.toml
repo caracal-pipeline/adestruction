@@ -1,10 +1,22 @@
 [tool.poetry]
 name = "caracal-destruct"
-version = "0.1.1"
+version = "0.1.2"
 description = "Batch runners for CARACal"
 authors = ["sphemakh <sphemakh@gmail.com>"]
 license = "MIT License"
 readme = "README.rst"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Astronomy"
+]
 homepage = "https://github.com/caracal-pipeline/adestruction"
 repository = "https://github.com/caracal-pipeline/adestruction"
 keywords = ["Astronomy", "Slurm", "Pipelines"]
