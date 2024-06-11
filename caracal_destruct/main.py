@@ -12,7 +12,7 @@ from caracal.dispatch_crew import config_parser
 from .slurm.run import SlurmRun
 from omegaconf.omegaconf import OmegaConf
 from caracal.schema import SCHEMA_VERSION
-from typing import List, Dict
+from typing import List, Dict, Union
 from .utils import File
 
 
@@ -32,7 +32,7 @@ def init_pipeline(options, config):
                                    end_worker=options.end_worker)
     return pipeline
 
-def mslist_driver(batchdict:Dict, config:File, skipus:List[str|int]) -> int:
+def mslist_driver(batchdict:Dict, config:File, skipus:List[Union[str,int]]) -> int:
     """_summary_
 
     Args:
