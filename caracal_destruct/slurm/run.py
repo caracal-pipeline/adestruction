@@ -95,6 +95,7 @@ class SlurmRun():
             log.info(f"Launching job using slurm. SPW={band} \n{self.slurm.__str__()}")
             runstring = f"{command} {self.var} '{band}'"
             job = self.slurm.sbatch(runstring)
+            self.slurm.reset_cmd()
             log.info(f"Job {job} is running: {runstring} ")
             self.jobs.append(job)
         return self.jobs
