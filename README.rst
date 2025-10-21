@@ -7,6 +7,13 @@ A Destruction of CARACals: Batch runners for CARACal
 ==============
 Installation
 ==============
+
+This package is available on *PYPI*
+
+.. code-block:: bash
+  
+    pip install caracal-destruct
+
 Installation from source_,
 working directory where source is checked out
 
@@ -14,11 +21,6 @@ working directory where source is checked out
   
     pip install .
 
-This package is available on *PYPI*, allowing
-
-.. code-block:: bash
-  
-    pip install caracal-destruct
 
 =====
 Usage
