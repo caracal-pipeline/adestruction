@@ -2,14 +2,17 @@
 name = "caracal-destruct"
 version = "0.1.3"
 description = "Batch runners for CARACal"
-authors = ["sphemakh <sphemakh@gmail.com>"]
-license = "MIT License"
+authors = [
+    {name="Sphesihle Makhathini", email="sphemakh@gmail.com"},
+]
+license = "MIT"
+license-file = ["LICENCE"]
 readme = "README.rst"
-requires_python = ">=3.9,<3.13"
+requires-python = ">=3.9,<3.13"
 keywords = ["Astronomy", "Slurm", "Pipelines"]
 
 dependencies = [
-    "caracal @ git+https://github.com/caracal-pipeline/caracal",
+    "caracal>=1.2.1",
     "click>=8.1.3",
     "simple-slurm>=0.3.6",
     "omegaconf>=2.3.0",
@@ -19,6 +22,10 @@ dependencies = [
 homepage = "https://caracal.readthedocs.io"
 Repository = "https://github.com/caracal-pipeline/adestruction"
 "Issue Tracker" = "https://github.com/caracal-pipeline/adestruction/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.sdist]
 include = ["caracal_destruct"]

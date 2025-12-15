@@ -1,50 +1,55 @@
-from dataclasses import dataclass, field
-import os.path
 import os
+import os.path
 import sys
-import re
 import time
 import traceback
-from typing import List, Dict, Union
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import List
 
-from caracal.workers.worker_administrator import WorkerAdministrator
-from caracal import log
 import caracal
-from omegaconf import OmegaConf
+from caracal import log
+from caracal.workers.worker_administrator import WorkerAdministrator
 from simple_slurm import Slurm
 
-from caracal_destruct.distribute import DestructSchema
-from caracal_destruct.distribute import Scatter
+from caracal_destruct import EmptyListDefault
+from caracal_destruct.distribute import DestructSchema, Scatter
 from caracal_destruct.utils import File, validate_caracal_config
 
 
+class SkipMode(Enum):
+    Index: str = "index"
+    Label: str = "label"
+    NoSkip: str = "noskip"
+
 
 @dataclass
-class SlurmRun():
+class SlurmRun:
     caracal_config_file: File
     config: DestructSchema
-    skip: List[str] = None
+    skip: List[str] = EmptyListDefault
     singularity_image_dir: str = None
     pipeline: WorkerAdministrator = field(init=False)
-        
+
     def __post_init__(self):
         self.config = DestructSchema(**self.config)
         self.slurm_config = self.config.slurm
 
-        self.skip = self.skip or []
         # options that apply to all runs
         self.allruns = self.config.caracal.all
         self.command_line = ["caracal --general-backend singularity"]
         self.command_line += [f"--config {self.caracal_config_file}"]
         command_line = self.command_line + ["--end-worker obsconf"]
 
-        self.pipeline = self.get_pipeline_instance() 
+        self.pipeline = self.get_pipeline_instance()
 
-        self.slurm_config.update({
-            "job_name": self.pipeline.prefix,
-            "output": f"log-adestruction-{Slurm.JOB_NAME}.out",
-            "error": f"log-adestruction-{Slurm.JOB_NAME}.err",
-        })
+        self.slurm_config.update(
+            {
+                "job_name": self.pipeline.prefix,
+                "output": f"log-adestruction-{Slurm.JOB_NAME}.out",
+                "error": f"log-adestruction-{Slurm.JOB_NAME}.err",
+            }
+        )
         self.slurmrun = Slurm(**self.slurm_config)
         self._reset_slurm()
 
@@ -52,8 +57,8 @@ class SlurmRun():
         # srun is hanging for some reason, so using sbatch and using the workaround below
         jobid = self.slurmrun.sbatch(" ".join(command_line))
 
-        max_sleep = 20/60 # obsconf worker should not take this long
-        sleep_check = 5 # check every 60s
+        max_sleep = 20 / 60  # obsconf worker should not take this long
+        sleep_check = 5  # check every 60s
         sleep_counter = 0
 
         while sleep_counter <= max_sleep:
@@ -67,7 +72,7 @@ class SlurmRun():
                 continue
 
         log.info("CARACal obsconf files created. Ready to distribute")
-        
+
         try:
             self.pipeline.run_workers()
         except SystemExit as e:
@@ -99,40 +104,46 @@ class SlurmRun():
             self.slurmrun.add_cmd(cmd)
 
     def get_pipeline_instance(self):
-
         workers_directory = os.path.join(caracal.PCKGDIR, "workers")
         backend = "singularity"
         caracal_config_dict = validate_caracal_config(self.caracal_config_file)
 
-        pipeline = WorkerAdministrator(caracal_config_dict,
-                                       workers_directory,
-                                       configFileName=self.caracal_config_file,
-                                       singularity_image_dir=self.singularity_image_dir,
-                                       container_tech=backend,
-                                       end_worker="obsconf")
+        pipeline = WorkerAdministrator(
+            caracal_config_dict,
+            workers_directory,
+            configFileName=self.caracal_config_file,
+            singularity_image_dir=self.singularity_image_dir,
+            container_tech=backend,
+            end_worker="obsconf",
+        )
 
         return pipeline
 
-
     def submit(self):
-
         pipeline = self.pipeline
         if not hasattr(self, "scatter"):
             raise RuntimeError("Slurm Run scatter has not been set.")
-        
+
         # Build caracal command
         command_line = list(self.command_line)
+        if self.skip:
+            if isinstance(self.skip[0], int):
+                skipmode = SkipMode.Index
+            else:
+                skipmode = SkipMode.Label
+        else:
+            skipmode = SkipMode.NoSkip
 
-        for i,msrun in enumerate(self.config.caracal.runs):
+        for i, msrun in enumerate(self.config.caracal.runs):
             runopts = self.scatter.runs[i]
             # ensure a clean slurm runner
             self._reset_slurm()
 
-            if i in self.skip:
-                log.info(f"Skipping run labelled '{msrun.label}' as requested")
+            if (skipmode is SkipMode.Index and i in self.skip) or (skipmode is SkipMode.Label and msrun in self.skip):
+                log.info(f"Skipping run labelled '{msrun.label} (index: {i})' as requested")
                 continue
-    
-            msdir = os.path.join(pipeline.msdir, msrun.label) 
+
+            msdir = os.path.join(pipeline.msdir, msrun.label)
             outdir = os.path.join(pipeline.output, msrun.label)
             command = command_line + [f"--general-output {outdir} --general-msdir {msdir}"]
             if runopts:
@@ -148,4 +159,3 @@ class SlurmRun():
             self.jobs.append(job)
 
         return self.jobs
-    
