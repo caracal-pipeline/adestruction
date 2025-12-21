@@ -140,6 +140,8 @@ class Scatter:
             for key, val in thisrun.items():
                 if isinstance(val, bool):
                     val = str(val).lower()
+                elif isinstance(val, list):
+                    val = str(val)
                 optlist.append(f"--{key} {val}")
 
             self.runs.append(optlist)
