@@ -30,8 +30,10 @@ from .utils import File
 @click.option(
     "-s",
     "--skip",
-    type=str,
-    help="Skip the listed steps. Specify as a comma separated list of integers (starting from zero) or ms names/paths.",
+    type=(str, int),
+    muliple=True,
+    default=[],
+    help="Skip run(s). Can be specified mulipe times",
 )
 @click.option("-sid", "--singularity_image_dir", help="Simgularity/apptainer image directory")
 @click.option("--boring", help="Dissable fancy logging", is_flag=True)
@@ -45,16 +47,12 @@ def driver(config_file, nband, bands, batchconfig, skip, singularity_image_dir, 
     CONFIG_FILE: CARACal configuration file
     """
     batchdict = OmegaConf.load(batchconfig.filename)
-    if skip:
-        skipus = skip.split(",")
-    else:
-        skipus = []
 
     loglevel = getattr(logging, log_level.upper())
     caracal.init_console_logging(boring=boring, debug=log_level == "debug")
     stimela.logger().setLevel(loglevel)
 
-    runit = SlurmRun(config_file, batchdict, skip=skipus, singularity_image_dir=singularity_image_dir)
+    runit = SlurmRun(config_file, batchdict, skip=skip, singularity_image_dir=singularity_image_dir)
     runit.scatter.set(nband=nband, bands=bands)
     runit.submit()
 
