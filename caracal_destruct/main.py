@@ -55,10 +55,6 @@ def driver(config_file, nband, bands, batchconfig, skip, singularity_image_dir, 
         if skipus[0].isdigit():
             skipus = [int(num) for num in skipus]
 
-    import pdb
-
-    pdb.set_trace()
-
     runit = SlurmRun(config_file, batchdict, skip=skipus, singularity_image_dir=singularity_image_dir)
     runit.scatter.set(nband=nband, bands=bands)
     runit.submit()
