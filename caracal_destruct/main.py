@@ -30,10 +30,8 @@ from .utils import File
 @click.option(
     "-s",
     "--skip",
-    type=(str, int),
-    muliple=True,
-    default=[],
-    help="Skip run(s). Can be specified mulipe times",
+    type=str,
+    help="Skip run(s). Comma separated list of indices (0-based), labels MS names",
 )
 @click.option("-sid", "--singularity_image_dir", help="Simgularity/apptainer image directory")
 @click.option("--boring", help="Dissable fancy logging", is_flag=True)
@@ -52,7 +50,16 @@ def driver(config_file, nband, bands, batchconfig, skip, singularity_image_dir, 
     caracal.init_console_logging(boring=boring, debug=log_level == "debug")
     stimela.logger().setLevel(loglevel)
 
-    runit = SlurmRun(config_file, batchdict, skip=skip, singularity_image_dir=singularity_image_dir)
+    if skip:
+        skipus = skip.split(",")
+        if skipus[0].isdigit():
+            skipus = [int(num) for num in skipus]
+
+    import pdb
+
+    pdb.set_trace()
+
+    runit = SlurmRun(config_file, batchdict, skip=skipus, singularity_image_dir=singularity_image_dir)
     runit.scatter.set(nband=nband, bands=bands)
     runit.submit()
 
