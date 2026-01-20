@@ -5,6 +5,12 @@ caracal:
   all:
     start-worker: flag
     end-worker: inspect
+    workers:
+      flag:
+        flag_antennas:
+          enable: true
+          antennas: 1,2
+      
   runs:
     - index: 0
       options:
