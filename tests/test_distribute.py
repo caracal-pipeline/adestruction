@@ -56,7 +56,9 @@ caracal:
       start-worker: crosscal
       flag:
         enable: false
-        antenna: 1,2
+        flag_antennas:
+          enable: true
+          antennas: 1,2
 """
 )
 
@@ -113,7 +115,7 @@ def test_MSRun():
     assert len(msruns[0].cmdline_args) == 0
 
     assert msruns[2].options
-    assert len(msruns[2].cmdline_args) == 0
+    assert len(msruns[2].cmdline_args) == 1
     assert "flag" in msruns[2].workers
 
     assert msruns[1].band == msrun_configs[1]["band"]
@@ -133,7 +135,7 @@ def test_CaracalRuns():
 
     run3_workers = dict(crun.runs[2].workers)
     crun.runs[1].cmdline_args[0][0] == "inspect-enable"
-    assert not crun.runs[2].cmdline_args
+    assert crun.runs[2].cmdline_args
     crun.apply_msrun_imports()
     assert run3_workers != crun.runs[2].workers
     crun.runs[2].cmdline_args[0][0] == "inspect-enable"
