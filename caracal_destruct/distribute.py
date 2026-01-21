@@ -2,32 +2,31 @@ import os
 import re
 import shlex
 import shutil
-import tempfile
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Union
 
 import caracal
 from caracal import log
-from caracal.workers.worker_administrator import WorkerAdministrator
 from caracal.dispatch_crew.config_parser import basic_parser
+from caracal.workers.worker_administrator import WorkerAdministrator
 from ruamel.yaml import YAML
 
-from caracal_destruct import utils 
-from caracal_destruct import EmptyDictDefault, EmptyListDefault
+from caracal_destruct import EmptyDictDefault, EmptyListDefault, utils
 from caracal_destruct.exceptions import DistributionException
 
-yaml = YAML(typ='rt')
+yaml = YAML(typ="rt")
 File = utils.File
 DestructValueType = Union[str, int, float]
 DestructMapType = Dict[str, Any]
+
 
 @dataclass
 class DestructOption:
     vars: DestructMapType
     args: List[str] = field(init=False, default_factory=list)
     workers: Dict[str, Any] = field(init=False, default_factory=dict)
-    
+
     def __post_init__(self):
         workers = {}
         args = []
@@ -36,7 +35,7 @@ class DestructOption:
                 workers[key] = value
             else:
                 args.append([key, value])
-            
+
         self.args = args
         self.workers = workers
 
@@ -62,7 +61,7 @@ class MSRun:
         options: Dict[str, Union[DestructValueType, DestructMapType]] = None,
         imports: List[str] = None,
     ):
-        self.ms = ms
+        self.ms = File(ms) if ms else ms
         self._band = band
         self.label = label
         self.options = options or {}
@@ -84,7 +83,7 @@ class MSRun:
         return self._prefix
 
     @prefix.setter
-    def prefix(self, value:str):
+    def prefix(self, value: str):
         self._prefix = value
 
     @property
@@ -92,7 +91,7 @@ class MSRun:
         return self._band
 
     @band.setter
-    def band(self, value:str):
+    def band(self, value: str):
         self._band = value
         self.workers.update(utils.caracal_cmdline_to_dict(self.split_band_option, value))
         if self.label is None:
@@ -105,13 +104,13 @@ class MSRun:
     @runcmd.setter
     def runcmd(self, value):
         self._runcmd = value
-    
+
     @property
     def skip(self) -> bool:
         return self._skip
-    
+
     @skip.setter
-    def skip(self, value:bool):
+    def skip(self, value: bool):
         self._skip = value
 
 
@@ -119,7 +118,9 @@ class MSRun:
 class CaracalRuns:
     runs: List[MSRun]  # List of caracal run specs
     mode: RunMode  # Run mode mslist|spwlist
-    all: Dict[str, Union[DestructValueType, DestructMapType] ] = EmptyDictDefault  # Options to passed to all caracal runs
+    all: Dict[str, Union[DestructValueType, DestructMapType]] = (
+        EmptyDictDefault  # Options to passed to all caracal runs
+    )
     nruns: int = field(init=False)
     bands: List[str] = field(init=False, default_factory=list)
     cmdline_args: List[str] = field(init=False, default_factory=list)
@@ -129,13 +130,18 @@ class CaracalRuns:
         self.nruns = len(self.runs)
         if not isinstance(self.runs[0], MSRun):
             self.runs = [MSRun(**msrun) for msrun in self.runs]
-        
+
         destruct_opts = DestructOption(self.all)
         self.workers = destruct_opts.workers
         self.cmdline_args = destruct_opts.args
 
         self.mode = RunMode(self.mode)
-        self.bands = [run_i.band for run_i in self.runs]
+        if self.mode is RunMode.SPWList:
+            self.bands = [run_i.band for run_i in self.runs]
+        elif self.mode is RunMode.MSList:
+            for msrun in self.runs:
+                if not msrun.label:
+                    msrun.label = msrun.ms.stem
 
     def set_prefixes(self, pipeline, bands=None):
         bands = bands or self.bands
@@ -155,12 +161,11 @@ class CaracalRuns:
             # these if statements have to be in this order
             if msrun.prefix is None:
                 msrun.prefix = f"{pipeline.prefix}-{msrun.label}"
-        
-        if set_bands:
-            self.bands = bands 
-    
-    def apply_msrun_imports(self):
 
+        if set_bands:
+            self.bands = bands
+
+    def apply_msrun_imports(self):
         for msrun in self.runs:
             msrun_args_keys = [item[0] for item in msrun.cmdline_args]
 
@@ -171,8 +176,8 @@ class CaracalRuns:
                 for arg in imports_args:
                     if arg[0] not in msrun_args_keys:
                         msrun.cmdline_args.append(arg)
-                
-                msrun.workers = utils.dict_deep_merge(self.runs[imports_idx].workers, msrun.workers) 
+
+                msrun.workers = utils.dict_deep_merge(self.runs[imports_idx].workers, msrun.workers)
 
 
 @dataclass
@@ -196,11 +201,11 @@ class Scatter:
     spwid: int = 0
     nchan: int = None
     nband: int = None
-    skiplist: List[Union[str,int]] = field(default_factory=list)
-    singularity_image_dir: Union[File,str] = None
+    skiplist: List[Union[str, int]] = field(default_factory=list)
+    singularity_image_dir: Union[File, str] = None
     caracal_binary: str = "caracal"
     skipmode: SkipMode = field(init=False)
-    caracal_config: Dict[str,Any] = field(init=False, default_factory=dict)
+    caracal_config: Dict[str, Any] = field(init=False, default_factory=dict)
     pipeline: WorkerAdministrator = field(init=False)
     caracal_run_config_files: List[File] = field(init=False)
 
@@ -210,7 +215,7 @@ class Scatter:
 
         if not isinstance(self.caracal_config_file, File):
             self.caracal_config_file = File(self.caracal_config_file)
-        
+
         if self.skiplist:
             if isinstance(self.skiplist[0], int):
                 self.skipmode = SkipMode.Index
@@ -229,9 +234,9 @@ class Scatter:
 
         wa_caracal_config = utils.validate_caracal_config(self.caracal_config_file)
         wa_caracal_config["general"]["prep_workspace"] = False
-        wa_caracal_config['general']['init_notebooks'] = []
-        wa_caracal_config['general']['report_notebooks'] = []
-        caracal_namespace = basic_parser().parse_args([]) 
+        wa_caracal_config["general"]["init_notebooks"] = []
+        wa_caracal_config["general"]["report_notebooks"] = []
+        caracal_namespace = basic_parser().parse_args([])
 
         self.pipeline = WorkerAdministrator(
             wa_caracal_config,
@@ -240,7 +245,7 @@ class Scatter:
             singularity_image_dir=None,
             container_tech=backend,
             generate_reports=False,
-            end_worker="obsconf"
+            end_worker="obsconf",
         )
 
         self.bands = list(self.caracal_runs.bands)
@@ -251,8 +256,8 @@ class Scatter:
                 self.bands = [f"{self.spwid}:{band}~{band + wsize}" for band in bw_edges]
             elif not self.bands:
                 raise RuntimeError("Both 'bands' and 'nband' are not set")
-            
-            self.caracal_runs.set_prefixes(self.pipeline, bands=self.bands)
+
+        self.caracal_runs.set_prefixes(self.pipeline, bands=self.bands)
 
         self.caracal_runs.apply_msrun_imports()
         self.caracal_run_config_files = []
@@ -264,29 +269,34 @@ class Scatter:
                 msrun.skip = True
                 continue
 
-            thisrun = {}
-            thisrun["general"] = dict(prefix=msrun.prefix)
-            if self.caracal_runs.mode is RunMode.MSList:
+            thisrun = {
+                "general": {"prefix": msrun.prefix},
+                "getdata": {},
+            }
 
-                msbase, ext = os.path.splitext(msrun.ms)
+            if self.caracal_runs.mode is RunMode.MSList:
+                msbase = msrun.ms.basename
+                msextn = msrun.ms.extension[1:]
                 thisrun["getdata"]["dataid"] = [msbase]
-                thisrun["getdata"]["extension"] = [ext[1:]]
+                thisrun["getdata"]["extension"] = msextn
 
             thisrun.update(self.caracal_runs.workers)
             # this deep merge ensures that partial updates of nested dicts don't delete intermediate branches
             thisrun = utils.dict_deep_merge(thisrun, msrun.workers)
             non_worker_cmdline_args = []
             non_worker_cmdline_keys = []
-            worker_cmdline_kwargs = {} 
+            worker_cmdline_kwargs = {}
             for key, value in msrun.cmdline_args + self.caracal_runs.cmdline_args:
                 # command-line options caracal parser namespace are sent to the command-line
-                if key.replace("-","_") in caracal_namespace:
+                if key.replace("-", "_") in caracal_namespace:
                     if key not in non_worker_cmdline_keys:
                         non_worker_cmdline_keys.append(key)
                         non_worker_cmdline_args += [f"--{key}", value]
                 # The rest (which should be worker settings) are converted to dicts are added to the config file
                 else:
-                    worker_cmdline_kwargs = utils.dict_deep_merge(worker_cmdline_kwargs, utils.caracal_cmdline_to_dict(key, value))
+                    worker_cmdline_kwargs = utils.dict_deep_merge(
+                        worker_cmdline_kwargs, utils.caracal_cmdline_to_dict(key, value)
+                    )
 
             thisrun_config = utils.dict_deep_merge(self.caracal_config, thisrun)
             fname = os.path.join(self.pipeline.output, f"adestruction-{msrun.prefix}.yaml")
@@ -295,7 +305,7 @@ class Scatter:
 
             log.info(f"Validating updated config for run={run_i}, label={msrun.label}")
             utils.validate_caracal_config(fname)
-            #self.caracal_run_config_files.append(fname)
+            # self.caracal_run_config_files.append(fname)
 
             runcmd = non_worker_cmdline_args + [f"--config {fname}", "-ct singularity"]
             if self.singularity_image_dir:
@@ -316,4 +326,3 @@ class Scatter:
                         shutil.rmtree(path)
                     except OSError as e:
                         log.info(f"Error deleting directory '{path}': {e}")
-            

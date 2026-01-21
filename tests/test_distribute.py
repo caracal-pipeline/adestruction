@@ -1,18 +1,20 @@
 import pytest
 from ruamel.yaml import YAML
 
-from caracal_destruct.distribute import DestructOption, MSRun, CaracalRuns, RunMode, DestructSchema, Scatter
+from caracal_destruct.distribute import CaracalRuns, DestructOption, DestructSchema, MSRun, RunMode, Scatter
 
 from . import InitTest
 
-yaml = YAML(typ='rt')
+yaml = YAML(typ="rt")
+
 
 @pytest.fixture
 def fixtures():
     return InitTest()
 
+
 CONFIG_SPWList = yaml.load(
-"""
+    """
 add_cmd:
 - module load Apptainer
 slurm:
@@ -55,17 +57,19 @@ caracal:
       flag:
         enable: false
         antenna: 1,2
-""")
+"""
+)
 
 CONFIG_MSList = yaml.load(
-"""
+    """
 
-""")
+"""
+)
 
 
 def test_DestructOption():
     destruct_caracal_all = yaml.load(
-"""
+        """
 start-worker: prep
 end-worker: crosscal
 prep-enable: true
@@ -77,8 +81,9 @@ flag:
     antennas: 1,2
 general:
   prefix: mypipelinerun
-""")
-  
+"""
+    )
+
     destruct_caracal_all = DestructOption(destruct_caracal_all)
 
     args = destruct_caracal_all.args
@@ -113,13 +118,12 @@ def test_MSRun():
 
     assert msruns[1].band == msrun_configs[1]["band"]
 
- 
+
 def test_CaracalRuns():
     config_caracal = CONFIG_SPWList["caracal"]
 
     crun = CaracalRuns(**config_caracal)
     assert crun.mode is RunMode.SPWList
-
 
     assert "start-worker" in [item[0] for item in crun.cmdline_args]
     assert "flag" in crun.workers
@@ -136,7 +140,6 @@ def test_CaracalRuns():
 
 
 def test_DestructSchema():
-    
     destruct = DestructSchema(**CONFIG_SPWList)
 
     assert "module load" in " ".join(destruct.add_cmd)
@@ -147,7 +150,7 @@ def test_DestructSchema():
 
 def test_Scatter(fixtures):
     caracal_config_file = fixtures.caracal_config
-    
+
     destruct = DestructSchema(**CONFIG_SPWList)
     bands = [irun.band for irun in destruct.caracal.runs]
 
@@ -162,4 +165,3 @@ def test_Scatter(fixtures):
     assert len(scatter.caracal_runs.runs[0].runcmd) == len(set(scatter.caracal_runs.runs[0].runcmd))
     assert len(scatter.caracal_runs.runs[1].runcmd) == len(set(scatter.caracal_runs.runs[1].runcmd))
     assert len(scatter.caracal_runs.runs[2].runcmd) == len(set(scatter.caracal_runs.runs[2].runcmd))
-    

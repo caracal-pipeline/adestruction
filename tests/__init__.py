@@ -2,13 +2,30 @@ import os.path
 import shutil
 import tempfile
 
+from ruamel.yaml import YAML
+
+yaml = YAML(typ="rt")
+
 TESTDIR = os.path.abspath(os.path.dirname(__file__))
 
 
 class InitTest:
     def __init__(self):
-        self.caracal_config = os.path.join(TESTDIR, "caracal_test-config.yaml")
-        self.test_files = []
+        self.spwlist_config = os.path.join(TESTDIR, "spwlist-config.yaml")
+        self.mslist_config = os.path.join(TESTDIR, "mslist-config.yaml")
+
+        caracal_config_file = os.path.join(TESTDIR, "caracal_test-config.yaml")
+
+        caracal_config = self.read_yaml(caracal_config_file)
+        self.caracal_config = self.random_named_file(suffix=".yaml")
+        caracal_config["general"]["input"] = os.path.join(TESTDIR, "input")
+        caracal_config["general"]["msdir"] = os.path.join(TESTDIR, "msdir")
+        caracal_config["general"]["output"] = os.path.join(TESTDIR, "output")
+
+        with open(self.caracal_config, "w") as stdw:
+            yaml.dump(caracal_config, stdw)
+
+        self.test_files = [self.caracal_config]
 
     def random_named_file(self, suffix: str = None):
         if not hasattr(self, "test_files"):
@@ -20,6 +37,11 @@ class InitTest:
 
         self.test_files.append(name)
         return name
+
+    def read_yaml(self, yfile):
+        with open(yfile) as stdr:
+            ydict = yaml.load(stdr)
+        return ydict
 
     def random_named_directory(self, suffix: str = None):
         if not hasattr(self, "test_files"):

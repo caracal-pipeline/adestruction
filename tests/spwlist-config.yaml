@@ -7,7 +7,7 @@ slurm:
   time: 2-1:00:00
 
 caracal:
-  mode: mslist
+  mode: spwlist
   all:
     start-worker: prep
     transform-split_field-nthreads: 32
@@ -23,14 +23,18 @@ caracal:
         scans: 4,16,10
 
   runs:
-  - ms: dummy1.ms
+  - label: band-01
+    band: 0:0.5813~0.6985GHz
     options:
       flag:
         flag_manual:
         - "antenna:m001,m002,m003,m004 scan:12"
-  - ms: dummy2.ms
+  - label: band-02
+    band: 0:0.6985~0.8157GHz
     imports: [0]
-  - ms: dummy3.ms
-  - ms: dummy4.ms
+  - label: band-03
+    band: 0:0.8157~0.9329GHz
+  - label: band-04
+    band: 0:0.9647~1.045GHz
     options:
-      start-worker: transform      
+      start-worker: transform

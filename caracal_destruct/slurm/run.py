@@ -15,7 +15,7 @@ from caracal_destruct.utils import File
 class SlurmRun:
     caracal_config_file: File
     config: DestructSchema
-    skiplist: List[Union[str,int]] = field(default_factory=list)
+    skiplist: List[Union[str, int]] = field(default_factory=list)
     bands: List[str] = field(default_factory=list)
     spwid: int = 0
     nchan: int = None
@@ -37,7 +37,7 @@ class SlurmRun:
             nband=self.nband,
             skiplist=self.skiplist,
             singularity_image_dir=self.singularity_image_dir,
-            )
+        )
 
         logfile = f"log-adestruction-{Slurm.JOB_NAME}.txt"
 
@@ -50,7 +50,7 @@ class SlurmRun:
         )
 
         self.slurmrun = Slurm(**self.config.slurm)
-       
+
         self.jobs = []
 
     def submit(self):
