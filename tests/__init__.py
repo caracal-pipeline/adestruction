@@ -16,16 +16,20 @@ class InitTest:
 
         caracal_config_file = os.path.join(TESTDIR, "caracal_test-config.yaml")
 
+        self.test_files = []
+
         caracal_config = self.read_yaml(caracal_config_file)
         self.caracal_config = self.random_named_file(suffix=".yaml")
-        caracal_config["general"]["input"] = os.path.join(TESTDIR, "input")
-        caracal_config["general"]["msdir"] = os.path.join(TESTDIR, "msdir")
-        caracal_config["general"]["output"] = os.path.join(TESTDIR, "output")
+        self.output = self.random_named_directory()
+        self.msdir = self.random_named_directory()
+        self.input = self.random_named_directory()
+
+        caracal_config["general"]["input"] = os.path.join(TESTDIR, self.input)
+        caracal_config["general"]["msdir"] = os.path.join(TESTDIR, self.msdir)
+        caracal_config["general"]["output"] = os.path.join(TESTDIR, self.output)
 
         with open(self.caracal_config, "w") as stdw:
             yaml.dump(caracal_config, stdw)
-
-        self.test_files = [self.caracal_config]
 
     def random_named_file(self, suffix: str = None):
         if not hasattr(self, "test_files"):

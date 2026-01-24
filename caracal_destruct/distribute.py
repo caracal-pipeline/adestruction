@@ -246,6 +246,7 @@ class Scatter:
             container_tech=backend,
             generate_reports=False,
             end_worker="obsconf",
+            partial_init=True,
         )
 
         self.bands = list(self.caracal_runs.bands)
