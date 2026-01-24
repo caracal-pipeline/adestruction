@@ -1,0 +1,104 @@
+schema_version: 1.2.0
+
+general:
+  prefix: mypipelinerun
+  msdir: tests/msdir
+
+getdata:
+  dataid: ['foobar']
+  extension: ms
+
+obsconf:
+  refant: auto
+
+transform:
+  enable: true
+  field: calibrators
+  label_out: cal
+  split_field:
+    enable: true
+    col: data
+
+prep:
+  enable: true
+  label_in: cal
+  field: calibrators
+
+flag:
+  enable: true
+  field: calibrators 
+  label_in: cal
+  flag_rfi:
+    enable: true
+    flagger: aoflagger
+  flag_autocorr:
+    enable: true
+  flag_shadow:
+    enable: true
+  report: true
+    
+crosscal:
+  enable: true
+  label_in: cal
+  apply_cal:
+    applyto:
+      - gcal
+      - bpcal
+  report: true
+
+inspect:
+  label_in: cal
+  label_plot: 1gc
+  dirname: crosscal
+  enable: true
+
+transform__2:
+  enable: true
+  split_field:
+    enable: true
+    otfcal:
+      enable: true
+      label_cal: 1gc1
+  
+prep__2:
+  enable: true
+  label_in: corr 
+  field: target
+
+flag__2:
+  enable: true
+  field: target 
+  label_in: corr
+  flag_rfi:
+    enable: true
+    flagger: aoflagger
+  report: true
+    
+mask:
+  enable: false
+
+selfcal:
+  enable: true
+  img_npix: 1800
+  img_cell: 2
+  cal_timeslots_chunk: 240
+  image:
+    enable: true
+  calibrate:
+    enable: true
+    gsols_timeslots: [120]
+  report: true
+
+line:
+  enable: true
+  restfreq: '1.420405752GHz'
+  make_cube:
+    enable: true
+    npix: [1800]
+    cell: 2
+  mstransform: 
+    enable: true
+    doppler:
+      enable: true
+      telescope: meerkat
+  report: true

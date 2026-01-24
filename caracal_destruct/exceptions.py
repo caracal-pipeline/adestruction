@@ -1,0 +1,2 @@
+class DistributionException(Exception):
+    pass
