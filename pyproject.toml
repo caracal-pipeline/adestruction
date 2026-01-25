@@ -1,6 +1,6 @@
 [project]
 name = "caracal-destruct"
-version = "0.1.3"
+version = "0.2.0"
 description = "Batch runners for CARACal"
 authors = [
     {name="Sphesihle Makhathini", email="sphemakh@gmail.com"},
