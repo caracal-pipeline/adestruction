@@ -51,8 +51,7 @@ class InitTest:
         if not hasattr(self, "test_files"):
             self.test_files = []
 
-        dir_obj = tempfile.TemporaryDirectory(suffix=suffix, dir=TESTDIR, delete=False)
-        name = dir_obj.name
+        name = tempfile.mkdtemp(suffix=suffix, dir=TESTDIR)
 
         self.test_files.append(name)
         return name
