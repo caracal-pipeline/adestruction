@@ -5,6 +5,7 @@ import click
 import stimela
 from omegaconf import OmegaConf
 
+from caracal_destruct import __version__
 from caracal_destruct.slurm.run import SlurmRun
 from caracal_destruct.utils import File
 
@@ -44,7 +45,14 @@ from caracal_destruct.utils import File
 @click.option(
     "--log-level", "-ll", type=click.Choice(["debug", "info", "error", "critical"]), default="info", help="Log level"
 )
-def driver(config_file, spw_split_spec, bands, batchconfig, skip, singularity_image_dir, boring, dryrun, log_level):
+@click.option(
+    "-v",
+    "--version",
+    is_flag=True,
+    help="Show the version and exit.",
+    callback=lambda ctx, param, value: click.echo(f"adestruction version {__version__}") or ctx.exit() if value else None,
+)
+def driver(config_file, spw_split_spec, bands, batchconfig, skip, singularity_image_dir, boring, dryrun, log_level, version):
     """
     A destruction of CARACals: Batch runners for CARACal
 
