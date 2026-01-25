@@ -38,17 +38,27 @@ Usage
 
     CONFIG_FILE: CARACal configuration file
 
-  Options:
-    -bc, --batch-config FILE  YAML file with batch configuration. Generated
-                              automatically if unspecified.  [required]
-    -nb, --nband INTEGER      Number of frequency bands to split data into
-    -b, --bands TEXT          CASA-style comma separated bands (or spws) to
-                              parallize the pipeline over. Overide -nb/--nband.
-                              Example, '0:0~1023,0:1024~2048'
-    -s, --skip TEXT           Skip the listed steps. Specify as a comma
-                              separated list of integers (starting from zero) or
-                              ms names/paths.
-    --help                    Show this message and exit.
+    Options:
+    -bc, --batch-config FILE        YAML file with batch configuration.
+                                    Generated automatically if unspecified.
+                                    [required]
+    -sss, --spw-split-spec SPWID[,NCHAN][,NBAND]
+                                    Comma-separated list specifying how to split
+                                    the data along frequency axis into NBAND
+                                    uniform partions.
+    -b, --bands TEXT                CASA-style comma separated bands (or spws)
+                                    to parallize the pipeline over. Example,
+                                    '0:0~1023,0:1024~2048'
+    -s, --skip TEXT                 Skip run(s). Comma separated list of indices
+                                    (0-based), labels MS names
+    -sid, --singularity_image_dir TEXT
+                                    Simgularity/apptainer image directory
+    --boring                        Dissable fancy logging
+    -dr, --dryrun                   Do a dry run
+    -ll, --log-level [debug|info|error|critical]
+                                    Log level
+    -v, --version                   Show the version and exit.
+    --help                          Show this message and exit.
 
 =======
 License
