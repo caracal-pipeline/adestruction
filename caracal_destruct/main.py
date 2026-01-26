@@ -50,9 +50,13 @@ from caracal_destruct.utils import File
     "--version",
     is_flag=True,
     help="Show the version and exit.",
-    callback=lambda ctx, param, value: click.echo(f"adestruction version {__version__}") or ctx.exit() if value else None,
+    callback=lambda ctx, param, value: click.echo(f"adestruction version {__version__}") or ctx.exit()
+    if value
+    else None,
 )
-def driver(config_file, spw_split_spec, bands, batchconfig, skip, singularity_image_dir, boring, dryrun, log_level, version):
+def driver(
+    config_file, spw_split_spec, bands, batchconfig, skip, singularity_image_dir, boring, dryrun, log_level, version
+):
     """
     A destruction of CARACals: Batch runners for CARACal
 
