@@ -298,15 +298,15 @@ class Scatter:
                     worker_cmdline_kwargs = utils.dict_deep_merge(
                         worker_cmdline_kwargs, utils.caracal_cmdline_to_dict(key, value)
                     )
-
             thisrun_config = utils.dict_deep_merge(self.caracal_config, thisrun)
+            # pipeline.output folder needs to exist
+            os.makedirs(self.pipeline.output, exist_ok=True)
             fname = os.path.join(self.pipeline.output, f"adestruction-{msrun.prefix}.yaml")
             with open(fname, "w") as stdw:
                 yaml.dump(thisrun_config, stdw)
-
-            log.info(f"Validating updated config for run={run_i}, label={msrun.label}")
+            log.info(f"CARACal config file for run={run_i}, label={msrun.label} stored at {fname}")
+            log.info(f"Validating config for run={run_i}, label={msrun.label}")
             utils.validate_caracal_config(fname)
-            # self.caracal_run_config_files.append(fname)
 
             runcmd = non_worker_cmdline_args + [f"--config {fname}", "-ct singularity"]
             if self.singularity_image_dir:
