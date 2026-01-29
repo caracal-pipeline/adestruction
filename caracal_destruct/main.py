@@ -3,7 +3,7 @@ import logging
 import caracal
 import click
 import stimela
-from omegaconf import OmegaConf
+from caracal import utils
 
 from caracal_destruct import __version__
 from caracal_destruct.slurm.run import SlurmRun
@@ -62,7 +62,7 @@ def driver(
 
     CONFIG_FILE: CARACal configuration file
     """
-    batchdict = OmegaConf.load(batchconfig.filename)
+    batchdict = utils.load_yaml(batchconfig.filename)
 
     loglevel = getattr(logging, log_level.upper())
     caracal.init_console_logging(boring=boring, debug=log_level == "debug")

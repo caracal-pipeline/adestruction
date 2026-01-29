@@ -6,6 +6,7 @@ from typing import Dict, List, Union
 
 from caracal import log
 from caracal.dispatch_crew import config_parser
+from omegaconf import DictConfig, ListConfig
 from ruamel.yaml import YAML
 
 yaml = YAML(typ="rt")
@@ -77,11 +78,11 @@ def dict_deep_merge(dict_a: Dict, dict_b: Dict) -> Dict:
     return result
 
 
-# from https://github.com/omry/omegaconf/discussions/1155#discussioncomment-8560712
+# adapted from https://github.com/omry/omegaconf/discussions/1155#discussioncomment-8560712
 def to_regular_dict(container):
-    if isinstance(container, dict):
+    if isinstance(container, (dict, DictConfig)):
         return {k: to_regular_dict(v) for k, v in container.items()}
-    elif isinstance(container, list):
+    elif isinstance(container, (list, ListConfig)):
         return [to_regular_dict(k) for k in container]
     else:
         return container

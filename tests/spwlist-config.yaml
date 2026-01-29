@@ -28,7 +28,9 @@ caracal:
     options:
       flag:
         flag_manual:
-        - "antenna:m001,m002,m003,m004 scan:12"
+          enable: true
+          rules:
+          - "antenna:m001,m002,m003,m004 scan:12"
   - label: band-02
     band: 0:0.6985~0.8157GHz
     imports: [0]

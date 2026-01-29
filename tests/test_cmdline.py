@@ -46,6 +46,7 @@ def test_mslist(fixtures):
     assert result.exit_code == 0
     assert "Job DRYRUN" in result.output
     assert f"run={nruns - 1}" in result.output
+    assert isinstance(schema.caracal.runs[0].workers["flag"]["flag_manual"]["rules"], list)
 
 
 def test_skip(fixtures):

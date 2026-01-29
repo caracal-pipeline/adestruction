@@ -6,7 +6,7 @@ authors = [
     {name="Sphesihle Makhathini", email="sphemakh@gmail.com"},
 ]
 license = "MIT"
-license-file = ["LICENCE"]
+license-files = ["LICENCE"]
 readme = "README.rst"
 requires-python = ">=3.9,<3.13"
 keywords = ["Astronomy", "Slurm", "Pipelines"]
@@ -16,7 +16,7 @@ dependencies = [
     "stimela @ git+https://github.com/ratt-ru/Stimela-classic",
     "click>=8.1.3",
     "simple-slurm>=0.3.6",
-    "omegaconf>=2.3.0",
+    "omegaconf>=2.3.0"
 ]
 
 [project.urls]
