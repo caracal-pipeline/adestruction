@@ -276,10 +276,9 @@ class Scatter:
             }
 
             if self.caracal_runs.mode is RunMode.MSList:
-                msbase = msrun.ms.basename
-                msextn = msrun.ms.extension[1:]
+                msbase, msextn = os.path.splitext(msrun.ms.basename)
                 thisrun["getdata"]["dataid"] = [msbase]
-                thisrun["getdata"]["extension"] = msextn
+                thisrun["getdata"]["extension"] = msextn[1:]
 
             thisrun.update(self.caracal_runs.workers)
             # this deep merge ensures that partial updates of nested dicts don't delete intermediate branches
