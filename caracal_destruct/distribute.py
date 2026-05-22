@@ -276,9 +276,9 @@ class Scatter:
             }
 
             if self.caracal_runs.mode is RunMode.MSList:
-                msbase = msrun.ms.basename
+                msstem = msrun.ms.stem
                 msextn = msrun.ms.extension[1:]
-                thisrun["getdata"]["dataid"] = [msbase]
+                thisrun["getdata"]["dataid"] = [msstem]
                 thisrun["getdata"]["extension"] = msextn
 
             thisrun.update(self.caracal_runs.workers)
